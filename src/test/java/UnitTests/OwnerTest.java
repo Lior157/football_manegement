@@ -31,6 +31,7 @@ public class OwnerTest {
     Page p = new Page();
     Team team = new Team("Blumfield", "Hapoel",p, dataManager);
 
+
     /**
      * the 5 following tests are testing UC 6.1.1
      * the 5 following tests assumes owner's account is connected allready
@@ -44,7 +45,7 @@ public class OwnerTest {
      * -insert new stadium
      * after choosing the desiered option, each of the 4 following tests corresponds to the selected option from above
      *
-     *
+     *THE FOLLOWING TEST is testing also UC 6.4
      *
      */
     @Test
@@ -66,8 +67,13 @@ public class OwnerTest {
             System.out.println(e.getMessage());
         }
 
-        assertTrue(team.getManagerList().size() > 0);
-        assertNotNull(team.getRoleHolder(own,userName,email));
+        try {
+            os.insertNewManager(own,teamName,"Yossi",userName,email);
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+            assertEquals(e.getMessage(),"The selected user is allready nominated as manager in this team");
+        }
+
     }
 
 
@@ -178,7 +184,7 @@ public class OwnerTest {
      * The following 2 test are testing U.C 6.1.2
      * tests asset deletion
      * asset is one of the following options: Player/Coach/Manager
-     * assumes that the user have chosen the button "RoleHolder-> chosen role from abocve)
+     * assumes that the user have chosen the button "RoleHolder-> chosen role from above)
      * you need to change the creation of the RoleHolder datatype to which you want to check according to the chosen data type
      * from above
      */
@@ -342,18 +348,17 @@ public class OwnerTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        Owner nominatedOwner=null;
         for (Role role : u2.getRoles()) {
             if (role instanceof Owner) {
-                nominatedOwner = (Owner)role;
+                Owner nominatedOwner = (Owner)role;
+                try {
+                    os.removeOwnership(own,nominatedOwner, team.getName());
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
+                }
             }
         }
-        try {
-            os.removeOwnership(own,nominatedOwner, team.getName());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
+
 
         assertEquals(team.getOwnerList().size() , 1);
         assertNotEquals(roles,u2.getRoles().size());

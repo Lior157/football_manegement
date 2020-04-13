@@ -45,7 +45,7 @@ public class OwnerService extends AUserService{
      * @param userName
      * @param email
      */
-    public void insertNewManager(Owner owner, String teamName, String managerName, String userName, String email) {
+    public void insertNewManager(Owner owner, String teamName, String managerName, String userName, String email) throws IOException {
         owner.insertNewManager(owner.getTeam(teamName),managerName,userName,email);
     }
 

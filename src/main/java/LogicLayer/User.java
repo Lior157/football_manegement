@@ -14,6 +14,13 @@ public class User {
     //private IController system;
     private List<Role> roles;
 
+    public User(User other) {
+        this.email = other.password;
+        this.password = other.password;
+        this.userName = other.userName;
+        this.roles = other.getRoles();
+    }
+
     public User(String email, String password, String userName) {
         this.email = email;
         this.password = password;
@@ -33,7 +40,7 @@ public class User {
 
     @Override
     public int hashCode() {
-        return Objects.hash(email, password, userName, roles);
+        return Objects.hash(email, password, userName);
     }
 
     /**

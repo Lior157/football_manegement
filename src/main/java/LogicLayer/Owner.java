@@ -42,6 +42,7 @@ public class Owner extends RoleHolder {
 
     /**
      * id: Owner@1
+     * **this function is used for both UC 6.1.1 and UC 6.4**
      * creates a new instance of manager without premissions with the following parameters
      * and connecting it to the requested team
      * @param team
@@ -49,14 +50,23 @@ public class Owner extends RoleHolder {
      * @param userName
      * @param email
      */
-    public void insertNewManager(Team team, String managerName, String userName, String email) {
+    public void insertNewManager(Team team, String managerName, String userName, String email) throws IOException {
 
         User user = this.getAssetUser(userName,email);
-        Manager manager = new Manager(user,managerName,team);
-        team.setManager(manager);
-        manager.setTeam(team);
-        user.setRole(manager);
-        team.getRoleHolders().add(manager);
+        if ( team.getManager(user) == null ) {
+            if ( team.getOwner(user) == null ) {
+                Manager manager = new Manager(user, managerName, team);
+                team.setManager(manager);
+                manager.setTeam(team);
+                user.setRole(manager);
+                team.getRoleHolders().add(manager);
+                assignManagerPremissions(manager);
+            }
+            else
+                throw new IOException("The selected user is allready nominated as the owner in the team");
+        }
+        else
+            throw new IOException("The selected user is allready nominated as manager in this team");
 
     }
 
@@ -431,37 +441,51 @@ public class Owner extends RoleHolder {
      * -the selected owner has a valid and existing user
      * -the selected owner was nominated by THIS owner
      * -the selected team exists in THIS teamList
-     * @param nominatedOwner
+     * @param nominated
      * @param teamName
      * @throws IOException if one of the terms does not match
      */
-    public void removeOwnership(Owner nominatedOwner, String teamName) throws IOException {
+    public void removeOwnership(Owner nominated, String teamName) throws IOException {
 
-        checkMembership(nominatedOwner.getUser(),teamName);
+        checkMembership(nominated.getUser(),teamName);
         Team team = getTeam(teamName);
-        if (team.getOwner(nominatedOwner.getUser()) != null) {
-            if (nominatedOwner.getNominatedBy().equals(this)) {
-                 for ( Role role : nominatedOwner.getUser().getRoles() ) {
+        if (team.getOwner(nominated.getUser()) != null) {
+            if (nominated.getNominatedBy().equals(this)) {
+                 for ( Role role : nominated.getUser().getRoles() ) {
                      if (role instanceof Player)
-                         deletePlayer(teamName,nominatedOwner.getUser().getUserName(),nominatedOwner.getUser().getEmail());
+                         deletePlayer(teamName,nominated.getUser().getUserName(),nominated.getUser().getEmail());
                      else if (role instanceof Coach)
-                         deleteCoach(teamName,nominatedOwner.getUser().getUserName(),nominatedOwner.getUser().getEmail());
+                         deleteCoach(teamName,nominated.getUser().getUserName(),nominated.getUser().getEmail());
                      else if (role instanceof Manager) // instance of manager
-                         deleteManager(teamName,nominatedOwner.getUser().getUserName(),nominatedOwner.getUser().getEmail());
+                         deleteManager(teamName,nominated.getUser().getUserName(),nominated.getUser().getEmail());
                      else {// OWNER
-                         team.getOwnerList().remove(nominatedOwner);
-                         team.getRoleHolders().remove(nominatedOwner);
+                         team.getOwnerList().remove(nominated);
+                         team.getRoleHolders().remove(nominated);
                      }
                  }
-                nominatedOwner.getUser().removeRole(nominatedOwner);
+                User u = nominated.getUser();
+                u.removeRole(nominated);
+                //CHECK THIS WHOLE PART
+                /*
+                User user = new User(nominated.getUser());
+                DM.addUser(user);
+                nominated = null;
+                */
             }
             else
                 throw new IOException("The selected owner can't be removed since he did not nominated by you");
         }
         else
             throw new IOException("The selected owner is not nominated as an owner of this team");
+    }
 
-
+    /**
+     * id: Owner@20
+     * assigns premissions to the chosen manager by the owner.
+     * @param manager
+     */
+    private void assignManagerPremissions(Manager manager) {
+        // we need to decide together what is the
     }
 }
 
