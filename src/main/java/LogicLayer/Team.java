@@ -21,7 +21,7 @@ public class Team {
     private List<Coach> coachList;
     private List<RoleHolder> roleHolders;
 
-    public Team(String stadium, String name, Page page, dataManager dataManager) implements Obs {
+    public Team(String stadium, String name, Page page, dataManager dataManager) implements {
         this.name = name;
         this.stadium = stadium;
         this.page = page;
