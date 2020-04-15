@@ -12,8 +12,6 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 
@@ -30,6 +28,8 @@ public class OwnerTest {
     Owner own = new Owner(ownerUser,"Alona the queen",dataManager);
     Page p = new Page();
     Team team = new Team("Blumfield", "Hapoel",p, dataManager);
+    User u3 = new User("abc", "aaa","haermi");
+    Administrator administrator = new Administrator(u3.getEmail(),u3.getPassword(),"hermione",controller,null);
 
 
     /**
@@ -362,14 +362,54 @@ public class OwnerTest {
 
         assertEquals(team.getOwnerList().size() , 1);
         assertNotEquals(roles,u2.getRoles().size());
+    }
 
+    @Test
+    /**
+     * test UC6
+     */
+    public void closeTeamActivity(){
 
+        //after this there are 2 roleholders in the team
+        initializeSystem();
+        testOwnerNominateOwner();
+        testOwnerAddManager();
+
+        try {
+            os.closeTeamActivity(own,team);
+        }
+        catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        assertEquals(dataManager.getAlerts().get(u2).size(), 1);
+        assertEquals(dataManager.getAlerts().get(u1).size(),1);
+        assertEquals(dataManager.getAlerts().get(u1).get(0).getDescription(), "The team: " + team.getName() + " is closed temporarily");
+    }
+
+    @Test
+    public void renewTeamActivity(){
+
+        closeTeamActivity();
+
+        try {
+            os.renewTeamActivity(own,team);
+        }
+        catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        assertEquals(dataManager.getAlerts().get(u2).size(), 2);
+        assertEquals(dataManager.getAlerts().get(u1).size(),2);
+        assertEquals(dataManager.getAlerts().get(u1).get(1).getDescription(), "The team: " + team.getName() + " is open");
     }
 
     private void initializeSystem() {
 
         controller.addUser(ownerUser);
+        controller.addUser(u3);
         dataManager.addUser(ownerUser);
+        dataManager.addUser(u3);
         dataManager.addUser(u1);
         dataManager.addUser(u2);
         ownerUser.setRole(own);

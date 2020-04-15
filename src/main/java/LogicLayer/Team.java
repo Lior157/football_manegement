@@ -3,10 +3,17 @@ package LogicLayer;
 import DataLayer.dataManager;
 import ServiceLayer.IController;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
 public class Team {
+
+    enum teamStatus{
+        activityClosed, activityOpened, ActivityOpened
+    }
 
     private dataManager dataManager;
     private String name;
@@ -20,8 +27,10 @@ public class Team {
     private League league;
     private List<Coach> coachList;
     private List<RoleHolder> roleHolders;
+    private teamStatus status;
 
     public Team(String stadium, String name, Page page, dataManager dataManager) {
+
         this.name = name;
         this.stadium = stadium;
         this.page = page;
@@ -33,6 +42,7 @@ public class Team {
         home = new LinkedList<>();
         coachList = new LinkedList<>();
         roleHolders = new LinkedList<>();
+        status = teamStatus.ActivityOpened;
 
     }
 
@@ -189,4 +199,37 @@ public class Team {
         this.coachList = coachList;
     }
 
+
+    /**
+     * id: Team@2
+     * changes the status of the team to close if the owner is the real owner of the team
+     * @param owner
+     */
+    public void changeTeamActivity(Owner owner, teamStatus newStatus) throws IOException {
+        if (ownerList.contains(owner)) {
+            String date = LocalDate.now().toString();
+            Alert alert;
+            for(RoleHolder roleHolder: getRoleHolders()){
+                if (roleHolder instanceof Manager || roleHolder instanceof Owner) {
+                    if (newStatus == teamStatus.activityClosed)
+                        alert = new Alert(roleHolder.getUser(), "The team: " + this.getName() + " is closed temporarily",date);
+                    else // Opened
+                        alert = new Alert(roleHolder.getUser(), "The team: " + this.getName() + " is open", date);
+                    dataManager.addAlert(roleHolder.getUser(),alert);
+                }
+            }
+            setStatus(newStatus);
+        }
+        else {
+            throw new IOException("This team can not be closed without official owner premission");
+        }
+    }
+
+    public void setStatus(teamStatus status) {
+        this.status = status;
+    }
+
+    public teamStatus getStatus(){
+        return status;
+    }
 }

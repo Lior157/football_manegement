@@ -155,7 +155,7 @@ public class dataManager implements IDataManager {
     }
 
     /**
-     * id: dataManager@
+     * id: dataManager@5
      * add New Referee To Data
      * @param referee
      * @return if added successfully, if not -> already contains the element
@@ -167,6 +167,21 @@ public class dataManager implements IDataManager {
             return true;
         }
         return false;
+    }
+
+    /**
+     * id: dataManager@6
+     * @param user
+     * @param alert
+     */
+    public void addAlert(User user,Alert alert) {
+        if (!Alerts.containsKey(user)) {
+            List<Alert>alerts = new LinkedList<>();
+            alerts.add(alert);
+            Alerts.put(user,alerts);
+        }
+        else
+            Alerts.get(user).add(alert);
     }
 
     /**

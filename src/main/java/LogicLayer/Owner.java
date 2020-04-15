@@ -487,5 +487,30 @@ public class Owner extends RoleHolder {
     private void assignManagerPremissions(Manager manager) {
         // we need to decide together what is the
     }
+
+    ////////////////////////////////// uc6
+    /**
+     * id: Owner@21
+     * closes the team and inform the managers and the owners of the team
+     * @param team
+     * @throws IOException
+     */
+    public void closeTeamActivity(Team team) throws IOException {
+        if (!getTeamList().contains(team))
+            throw new IOException("Selected team is not owned by the owner");
+        team.changeTeamActivity(this, Team.teamStatus.activityClosed);
+    }
+
+    /**
+     * id: Owner@22
+     * Opens the team and inform the managers and the owners of the team
+     * @param team
+     * @throws IOException
+     */
+    public void openTeamActivity(Team team) throws IOException {
+        if (!getTeamList().contains(team))
+            throw new IOException("Selected team is not owned by the owner");
+        team.changeTeamActivity(this, Team.teamStatus.activityOpened);
+    }
 }
 

@@ -185,7 +185,7 @@ public class OwnerService extends AUserService{
 
     /**
      * id: OwnerService@11
-     * activates process of removing owner from all of his nominations in the selected grop
+     * activates process of removing owner from all of his nominations in the selected team
      * @param own
      * @param nominatedOwner
      * @param teamName
@@ -193,6 +193,28 @@ public class OwnerService extends AUserService{
      */
     public void removeOwnership(Owner own, Owner nominatedOwner, String teamName) throws IOException {
         own.removeOwnership(nominatedOwner,teamName);
+    }
+
+    /**
+     * id: OwnerService@12
+     * closes the selected team's activity temporarily
+     * @param own
+     * @param team
+     * @throws IOException if the selected team is not owned by the owner
+     */
+    public void closeTeamActivity(Owner own, Team team) throws IOException {
+        own.closeTeamActivity(team);
+    }
+
+    /**
+     * id: OwnerService@13
+     * closes the selected team's activity temporarily
+     * @param own
+     * @param team
+     * @throws IOException if the selected team is not owned by the owner
+     */
+    public void renewTeamActivity(Owner own, Team team) throws IOException {
+        own.openTeamActivity(team);
     }
 }
 

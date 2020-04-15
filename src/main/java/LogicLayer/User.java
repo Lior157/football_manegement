@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import DataLayer.dataManager;
 import ServiceLayer.*;
 
 public class User {
@@ -11,7 +12,7 @@ public class User {
     private String email;
     private String password;
     private String userName;
-    //private IController system;
+    private DataLayer.dataManager dataManager;
     private List<Role> roles;
 
     public User(User other) {

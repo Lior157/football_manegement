@@ -9,12 +9,11 @@ public class Alert {
     private User user;
     private IController system;
     private String description;
-    Date date;
+    String date;
     // hour is missing
 
-    public Alert(User user, IController system, String description, Date date) {
+    public Alert(User user, String description, String date) {
         this.user = user;
-        this.system = system;
         this.description = description;
         this.date = date;
     }
@@ -43,11 +42,11 @@ public class Alert {
         this.description = description;
     }
 
-    public Date getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(String date) {
         this.date = date;
     }
 }
