@@ -126,17 +126,16 @@ public class Team {
 
     /**
      * id: Team@1
-     * returns a RoleHolder that belongs to the requiered team of the given owner
+     * returns a RoleHolder that belongs to the requiered team
      * search is made by user name and email
-     * @param owner
      * @param userName
      * @param email
      * @return
      */
-    public RoleHolder getRoleHolder(Owner owner, String userName,String email) {
+    public RoleHolder getRoleHolder(String userName,String email) {
 
         User user = dataManager.getUserByMail(userName,email);
-        if (this.ownerList.contains(owner)) {
+        if (user!=null) {
             for (RoleHolder roleHolder : this.roleHolders) {
                 if (roleHolder.getUser().equals(user))
                     return roleHolder;

@@ -29,7 +29,7 @@ public class OwnerTest {
     Page p = new Page();
     Team team = new Team("Blumfield", "Hapoel",p, dataManager);
     User u3 = new User("abc", "aaa","haermi");
-    Administrator administrator = new Administrator(u3.getEmail(),u3.getPassword(),"hermione",controller,null);
+    User u4 = new User("Hogwarts.com","12345678","Albus Dumbeldore");
 
 
     /**
@@ -56,23 +56,28 @@ public class OwnerTest {
         String userName = "alonalas";
         String email = "a@b@c";
         String teamName = "Hapoel";
-        Manager m1 = new Manager(); // when button "Manager" is chosen
+        Map<Manager.Permission,Boolean> permissionBooleanMap = new HashMap<>();
+        permissionBooleanMap.put(Manager.Permission.playerDeletion,true);
+        permissionBooleanMap.put(Manager.Permission.coachDeletion, true);
+        permissionBooleanMap.put(Manager.Permission.coachAddition, true);
+        permissionBooleanMap.put(Manager.Permission.playerAddition, true);
+
 
         try {
-            os.validateExistingAssetType(own,teamName, email,userName);
-            controller.displayForm(m1);
-            os.insertNewManager(own,teamName, "Yossi", userName,email);
+            os.insertNewManager(own,teamName, "Yossi", userName,email, permissionBooleanMap);
         }
         catch (IOException e){
             System.out.println(e.getMessage());
         }
 
         try {
-            os.insertNewManager(own,teamName,"Yossi",userName,email);
+            os.insertNewManager(own,teamName,"Yossi",userName,email,permissionBooleanMap);
         } catch (IOException e) {
             System.out.println(e.getMessage());
             assertEquals(e.getMessage(),"The selected user is allready nominated as manager in this team");
         }
+
+
 
     }
 
@@ -86,18 +91,15 @@ public class OwnerTest {
         String userName = "amirLasry";
         String email = "amir@post";
         String teamName = "Hapoel";
-        Coach c = new Coach(); // when button "Coach" is chosen
 
         try {
-            os.validateExistingAssetType(own,teamName, email,userName);
-            controller.displayForm(c);
             os.insertNewCoach(own,teamName,"Dani","university of life","fitting rooms", userName,email);
         }
         catch (IOException e){
             System.out.println(e.getMessage());
         }
         assertTrue(team.getCoachList().size() > 0);
-        assertNotNull(team.getRoleHolder(own,userName,email));
+        assertNotNull(team.getRoleHolder(userName,email));
     }
 
     @Test
@@ -108,11 +110,8 @@ public class OwnerTest {
         String userName = "alonalas";
         String email = "a@b@c";
         String teamName = "Hapoel";
-        Player p = new Player(); // when button "Player" is chosen
 
         try {
-            os.validateExistingAssetType(own,teamName, email,userName);
-            controller.displayForm(p);
             os.insertNewPlayer(own,teamName,"David","GoalKeeper",1,2,1995,userName,email);
         }
         catch (IOException e){
@@ -120,7 +119,7 @@ public class OwnerTest {
         }
 
         assertTrue(team.getPlayerList().size() > 0);
-        assertNotNull(team.getRoleHolder(own,userName,email));
+        assertNotNull(team.getRoleHolder(userName,email));
 
     }
 
@@ -133,8 +132,6 @@ public class OwnerTest {
         String teamName = "Hapoel";
 
         try {
-            os.validateExistingAssetType(own,teamName,"X","X");
-            controller.displayForm(null);
             os.insertNewStadium(own,teamName,stadium);
         }
         catch (IOException e){
@@ -152,7 +149,7 @@ public class OwnerTest {
         String message="";
 
         try {
-            check("Hapoel", "aaa", "bbb", new Manager());
+            check("Hapoel", "aaa", "bbb");
         }
         catch (IOException e) {
             thrown = true;
@@ -160,9 +157,10 @@ public class OwnerTest {
         }
         assertTrue(thrown);
         assertEquals(message,"The chosen user does not exist, please insert valid inputs");
+        thrown=false;
 
         try {
-            check("Beitar", "a@b@c", "alonalas", new Manager());
+            check("Beitar", "a@b@c", "alonalas");
         }
         catch (IOException e) {
             thrown = true;
@@ -173,10 +171,14 @@ public class OwnerTest {
 
     }
 
-    public void check(String teamName, String email, String userName, RoleHolder roleHolder) throws IOException {
-        os.validateExistingAssetType(own,teamName, email,userName);
-        controller.displayForm(roleHolder);
-        os.insertNewManager(own,teamName, "xxx", userName,email);
+    public void check(String teamName, String email, String userName) throws IOException {
+
+        Map<Manager.Permission,Boolean> permissionBooleanMap = new HashMap<>();
+        permissionBooleanMap.put(Manager.Permission.playerDeletion,true);
+        permissionBooleanMap.put(Manager.Permission.coachDeletion, true);
+        permissionBooleanMap.put(Manager.Permission.coachAddition, true);
+        permissionBooleanMap.put(Manager.Permission.playerAddition, true);
+        os.insertNewManager(own,teamName, "xxx", userName,email,permissionBooleanMap);
     }
 
     @Test
@@ -198,7 +200,6 @@ public class OwnerTest {
         String teamName = "Hapoel";
 
         try {
-            os.validateExistingAssetType(own,teamName,email,userName);
             os.deleteRoleHolder(own,teamName,userName,email,toDelete);
         }
         catch (IOException e) {
@@ -206,7 +207,7 @@ public class OwnerTest {
         }
 
         assertTrue(team.getPlayerList().size() == 0);
-        assertNull(team.getRoleHolder(own,userName,email));
+        assertNull(team.getRoleHolder(userName,email));
 
     }
 
@@ -223,7 +224,6 @@ public class OwnerTest {
         String stadium = "Blumfield";
 
         try {
-            os.validateExistingAssetType(own,teamName,"X","X");
             os.deleteStadium(own,teamName,stadium);
         }
         catch (IOException e) {
@@ -249,7 +249,7 @@ public class OwnerTest {
 
         testOwnerAddPlayer(); // player Exists in the system
         // u1 = ("a@b@c","1234","alonalas");
-        RoleHolder toUpdate = team.getRoleHolder(own,u1.getUserName(),u1.getEmail());
+        RoleHolder toUpdate = team.getRoleHolder(u1.getUserName(),u1.getEmail());
 
         String teamName = "Hapoel";
 
@@ -279,7 +279,7 @@ public class OwnerTest {
         }
 
         testOwnerAddCoach();
-        toUpdate = team.getRoleHolder(own,u2.getUserName(),u2.getEmail());
+        toUpdate = team.getRoleHolder(u2.getUserName(),u2.getEmail());
         attributes.clear();
         attributes.put("Qualification","Harry Potter expert");
 
@@ -358,15 +358,44 @@ public class OwnerTest {
                 }
             }
         }
-
-
         assertEquals(team.getOwnerList().size() , 1);
         assertNotEquals(roles,u2.getRoles().size());
     }
 
     @Test
     /**
-     * test UC6
+     * test UC 6.5
+     */
+    public void testRemoveManagerNomination() {
+
+        initializeSystem();
+        testOwnerAddManager();
+        testOwnerNominateOwner(); // u1
+        Map<Manager.Permission,Boolean> permissionBooleanMap = new HashMap<>();
+        try {
+            os.insertNewManager(own,team.getName(),"Prof. snape",u3.getUserName(),u3.getEmail(),permissionBooleanMap);
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        //now there are 2 managers to team
+        try {
+            Owner anotherOwner = team.getOwner(u2);
+            os.deleteRoleHolder(anotherOwner,team.getName(),u3.getUserName(),u3.getEmail(),team.getRoleHolder(u3.getUserName(),u3.getEmail()));
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+            assertEquals(e.getMessage(),"The selected manager was not nominated by you");
+        }
+        try {
+            os.deleteRoleHolder(own,team.getName(),u3.getUserName(),u3.getEmail(),team.getRoleHolder(u3.getUserName(),u3.getEmail()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        assertEquals(team.getManagerList().size(),1);
+    }
+
+    @Test
+    /**
+     * The 2 following tests are testing UC6.6.1 and 6.6.2
      */
     public void closeTeamActivity(){
 
@@ -407,8 +436,8 @@ public class OwnerTest {
     private void initializeSystem() {
 
         controller.addUser(ownerUser);
-        controller.addUser(u3);
         dataManager.addUser(ownerUser);
+        dataManager.addUser(u4);
         dataManager.addUser(u3);
         dataManager.addUser(u1);
         dataManager.addUser(u2);
@@ -417,10 +446,5 @@ public class OwnerTest {
         team.addOwner(own);
 
     }
-
-
-
-
-
 
 }

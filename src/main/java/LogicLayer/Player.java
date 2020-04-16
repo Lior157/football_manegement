@@ -1,6 +1,5 @@
 package LogicLayer;
 
-import java.lang.reflect.Field;
 import java.util.Objects;
 
 public class Player extends RoleHolder{

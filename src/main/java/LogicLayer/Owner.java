@@ -43,60 +43,67 @@ public class Owner extends RoleHolder {
     /**
      * id: Owner@1
      * **this function is used for both UC 6.1.1 and UC 6.4**
-     * creates a new instance of manager without premissions with the following parameters
+     * creates a new instance of manager with the selected premissions with the argument parameters
      * and connecting it to the requested team
-     * @param team
+     * @param teamName
      * @param managerName
      * @param userName
      * @param email
+     * @throws IOException if the user or the team are not exist
      */
-    public void insertNewManager(Team team, String managerName, String userName, String email) throws IOException {
+    public void insertNewManager(String teamName, String managerName, String userName,
+                                 String email, Map<Manager.Permission, Boolean> permissionBooleanMap) throws IOException {
 
-        User user = this.getAssetUser(userName,email);
-        if ( team.getManager(user) == null ) {
-            if ( team.getOwner(user) == null ) {
-                Manager manager = new Manager(user, managerName, team);
-                team.setManager(manager);
-                manager.setTeam(team);
-                user.setRole(manager);
-                team.getRoleHolders().add(manager);
-                assignManagerPremissions(manager);
-            }
-            else
-                throw new IOException("The selected user is allready nominated as the owner in the team");
+           if (validateExistingAssetType(teamName,email,userName)) {
+            User user = this.getAssetUser(userName, email);
+            Team team = getTeam(teamName);
+            if (team.getManager(user) == null) {
+                if (team.getOwner(user) == null) {
+                    Manager manager = new Manager(user, managerName, team, DM);
+                    manager.setNominatedBy(this);
+                    team.setManager(manager);
+                    manager.setTeam(team);
+                    user.setRole(manager);
+                    team.getRoleHolders().add(manager);
+                    assignManagerPremissions(manager, permissionBooleanMap);
+                } else
+                    throw new IOException("The selected user is allready nominated as the owner in the team");
+            } else
+                throw new IOException("The selected user is allready nominated as manager in this team");
         }
-        else
-            throw new IOException("The selected user is allready nominated as manager in this team");
-
     }
 
     /**
      * id: Owner@2
-     * creates a new instance of coach without with the following parameters
+     * creates a new instance of coach with with the argument parameters
      * and connecting it to the requested team
-     * @param team
+     * @param teamName
      * @param name
      * @param qualification
      * @param job
      * @param userName
      * @param email
+     * @throws IOException if the user or the team are not exist
      */
-    public void insertNewCoach(Team team, String name, String qualification, String job, String userName,
-                               String email) {
-        User user = this.getAssetUser(userName,email);
-        Page page = new Page();
-        Coach coach = new Coach(user,name,qualification,job,page,team);
-        coach.setTeam(team);
-        team.setCoach(coach);
-        user.setRole(coach);
-        team.getRoleHolders().add(coach);
+    public void insertNewCoach(String teamName, String name, String qualification, String job, String userName,
+                               String email) throws IOException {
+        if (validateExistingAssetType(teamName,email,userName)) {
+            User user = this.getAssetUser(userName, email);
+            Team team = getTeam(teamName);
+            Page page = new Page();
+            Coach coach = new Coach(user, name, qualification, job, page, team);
+            coach.setTeam(team);
+            team.setCoach(coach);
+            user.setRole(coach);
+            team.getRoleHolders().add(coach);
+        }
     }
 
     /**
      * id: Owner@3
      * creates a new instance of player with the following parameters
      * and connecting it to the requested team
-     * @param team
+     * @param teamName
      * @param name
      * @param position
      * @param day
@@ -104,28 +111,36 @@ public class Owner extends RoleHolder {
      * @param year
      * @param userName
      * @param email
+     * @throws IOException if the team or the user are not exist
      */
-    public void insertNewPlayer(Team team, String name, String position, int day ,
-                                int month, int year , String userName,String email) {
-        User user = this.getAssetUser(userName,email);
-        String date = day+"-"+month+"-"+year;
-        Page page = new Page();
-        Player player = new Player(user,position,team,name, date ,page);
-        team.setPlayer(player);
-        player.setTeam(team);
-        team.setPlayer(player);
-        user.setRole(player);
-        team.getRoleHolders().add(player);
+    public void insertNewPlayer(String teamName, String name, String position, int day ,
+                                int month, int year , String userName,String email) throws IOException {
+
+        if (validateExistingAssetType(teamName,email,userName)) {
+            validateBirthDate(day,month,year);
+            Team team = getTeam(teamName);
+            User user = this.getAssetUser(userName, email);
+            String date = day + "-" + month + "-" + year;
+            Page page = new Page();
+            Player player = new Player(user, position, team, name, date, page);
+            team.setPlayer(player);
+            player.setTeam(team);
+            team.setPlayer(player);
+            user.setRole(player);
+            team.getRoleHolders().add(player);
+        }
     }
 
     /**
      * id: Owner@4
      * uploads the team's stadium
-     * @param team
+     * @param teamName
      * @param stadium
+     * @throws IOException if the team is not exist
      */
-    public void insertNewStadium(Team team, String stadium) {
-        team.setStadium(stadium);
+    public void insertNewStadium(String teamName, String stadium) throws IOException {
+        validateExistingAssetType(teamName,"X","X");
+        getTeam(teamName).setStadium(stadium);
     }
 
     /**
@@ -134,16 +149,20 @@ public class Owner extends RoleHolder {
      * @param teamName
      * @param userName
      * @param email
+     * @throws IOException if the user or the team are not exist
      */
-    public void deletePlayer(String teamName,String userName,String email) {
-        User user = getAssetUser(userName,email);
-        Team team = getTeam(teamName);
-        for ( Role role : user.getRoles() ) {
-            if (role instanceof Player) {
-                Player player = (Player)role;
-                team.getPlayerList().remove(player);
-                team.getRoleHolders().remove(player);
-                user.removeRole(player);
+    public void deletePlayer(String teamName,String userName,String email) throws IOException {
+        if ( validateExistingAssetType(teamName,email,userName)) {
+            User user = getAssetUser(userName, email);
+            Team team = getTeam(teamName);
+            for (Role role : user.getRoles()) {
+                if (role instanceof Player) {
+                    Player player = (Player) role;
+                    team.getPlayerList().remove(player);
+                    team.getRoleHolders().remove(player);
+                    user.removeRole(player);
+                    break;
+                }
             }
         }
     }
@@ -157,17 +176,20 @@ public class Owner extends RoleHolder {
      */
     public void deleteCoach(String teamName,String userName,String email) throws IOException {
 
-        Team team = getTeam(teamName);
-        if ( team.getCoachList().size() < 2 )
-            throw new IOException("Cannot remove the last coach of the team");
-        else {
-            User user = getAssetUser(userName,email);
-            for (Role role : user.getRoles()) {
-                if (role instanceof Coach) {
-                    Coach coach = (Coach) role;
-                    team.getRoleHolders().remove(coach);
-                    team.getCoachList().remove(coach);
-                    user.removeRole(coach);
+        if (validateExistingAssetType(teamName,email,userName)) {
+            Team team = getTeam(teamName);
+            if (team.getCoachList().size() < 2)
+                throw new IOException("Cannot remove the last coach of the team");
+            else {
+                User user = getAssetUser(userName, email);
+                for (Role role : user.getRoles()) {
+                    if (role instanceof Coach) {
+                        Coach coach = (Coach) role;
+                        team.getRoleHolders().remove(coach);
+                        team.getCoachList().remove(coach);
+                        user.removeRole(coach);
+                        break;
+                    }
                 }
             }
         }
@@ -175,47 +197,40 @@ public class Owner extends RoleHolder {
 
     /**
      * id: 0wner@7
-     * Deletes a manager from the team's managerList iff there is more than one manager
+     * Deletes a manager from the team's managerList\
      * @param teamName
      * @param userName
      * @param email
-     * @throws IOException
+     * @throws IOException in the following cases:
+     * user does not exist
+     * team does not exist
+     * there is only 1 manager in the team
+     * the selected manager was not nominated by THIS owner
      */
     public void deleteManager(String teamName,String userName,String email) throws IOException {
 
-        Team team = getTeam(teamName);
-        if (team.getManagerList().size() < 2 ) {
-            throw new IOException("Cannot remove the last manager of the team");
-        }
-        else {
-            User user = getAssetUser(userName,email);
-            for ( Role role : user.getRoles() ) {
-                if (role instanceof Manager) {
-                    Manager manager = (Manager)role;
-                    team.getManagerList().remove(manager);
-                    team.getRoleHolders().remove(manager);
-                    user.removeRole(role);
+        if (validateExistingAssetType(teamName,email,userName)) {
+            Team team = getTeam(teamName);
+            if (team.getManagerList().size() < 2) {
+                throw new IOException("Cannot remove the last manager of the team");
+            } else {
+                User user = getAssetUser(userName, email);
+                for (Role role : user.getRoles()) {
+                    if (role instanceof Manager) {
+                        Manager manager = (Manager) role;
+                        if (manager.getNominatedBy().equals(this)) {
+                            team.getManagerList().remove(manager);
+                            team.getRoleHolders().remove(manager);
+                            user.removeRole(role);
+                            break;
+                        }
+                        else
+                            throw new IOException("The selected manager was not nominated by you");
+                    }
                 }
             }
         }
-
     }
-
-
-    /*
-     * id: Owner@8
-     * Deletes a role from the user's roleList
-     * @param user
-     * @param roleHolder
-     */
-    /*
-    private void deleteRole(User user, RoleHolder roleHolder) {
-        for ( Role role : user.getRoles()) {
-            if (role.equals(roleHolder))
-                user.getRoles().remove(role);
-        }
-    }
-    /*
 
     /**
      * id: Owner@9
@@ -262,10 +277,12 @@ public class Owner extends RoleHolder {
      * @param teamName
      * @param stadium
      */
-    public void deleteStadium(String teamName, String stadium) {
-        Team team = getTeam(teamName);
-        if (team.getStadium().toLowerCase().equals(stadium.toLowerCase()))
-            team.setStadium("NO_STADIUM");
+    public void deleteStadium(String teamName, String stadium) throws IOException {
+        if (validateExistingAssetType(teamName,"X","X")) {
+            Team team = getTeam(teamName);
+            if (team.getStadium().toLowerCase().equals(stadium.toLowerCase()))
+                team.setStadium("NO_STADIUM");
+        }
     }
     /**
      * id: Owner@13
@@ -364,7 +381,7 @@ public class Owner extends RoleHolder {
         if (DM.getUserList().contains(user)) {
             Team team = getTeam(teamName);
             if( team != null ) {
-                RoleHolder roleHolder = team.getRoleHolder(this,user.getUserName(),user.getEmail());
+                RoleHolder roleHolder = team.getRoleHolder(user.getUserName(),user.getEmail());
                 if (roleHolder != null ) {
                     return true;
                 }
@@ -483,9 +500,11 @@ public class Owner extends RoleHolder {
      * id: Owner@20
      * assigns premissions to the chosen manager by the owner.
      * @param manager
+     * @param permissionBooleanMap
      */
-    private void assignManagerPremissions(Manager manager) {
-        // we need to decide together what is the
+    private void assignManagerPremissions(Manager manager, Map<Manager.Permission, Boolean> permissionBooleanMap)
+            throws IOException {
+        manager.setPermissions(permissionBooleanMap,this);
     }
 
     ////////////////////////////////// uc6
@@ -511,6 +530,52 @@ public class Owner extends RoleHolder {
         if (!getTeamList().contains(team))
             throw new IOException("Selected team is not owned by the owner");
         team.changeTeamActivity(this, Team.teamStatus.activityOpened);
+    }
+
+    /**
+     * id: Owner@23
+     * validates that the team is exist and connected to the owner
+     * validates that the email and userName are attached to an existing account
+     * @return User if exists
+     * @param teamName
+     * @param email
+     * @param userName
+     * @return true if the user exists, else throws exception
+     * @throws IOException
+     */
+    private boolean validateExistingAssetType(String teamName,String email, String userName) throws IOException {
+        Team team = getTeam(teamName);
+        if (team == null)
+            throw new IOException("The chosen team does not exist, please choose a valid team");
+
+        if (!(email.equals("X") && userName.equals("X"))) { // not a stadium
+            boolean exists = findUser(userName, email);
+            if (!exists)
+                throw new IOException("The chosen user does not exist, please insert valid inputs");
+        }
+        return true;
+    }
+
+    /**
+     * id: Owner@24
+     * validates the ranges of a player's birthday
+     * @param day
+     * @param month
+     * @param year
+     * @throws IOException
+     */
+    private void validateBirthDate(int day, int month, int year) throws IOException {
+
+        if (!(year > 1900 && year < 2020 )) {
+            throw new IOException("Year of birth is illegal, please insert a year between " +
+                    "1900 and 2020");
+        }
+        if (!(month > 0 && month < 13 )) {
+            throw new IOException("Month is illegal, please insert valid month between 1 and 12");
+        }
+        if (!(day > 0 && day < 32 )) {
+            throw new IOException("Day is illegal, please insert valid day between 1 and 31");
+        }
     }
 }
 
